@@ -12,173 +12,79 @@
 </head>
 <body class="bg-slate-100 min-h-screen">
   <div id="app"></div>
-
   <script>
     const STORAGE_KEY = "sistema_delegacao_data";
     const USER_KEY = "sistema_user";
-
     const defaultData = {
-      users: [{
-        id: "gerente-1",
-        nome: "Gerente Principal",
-        email: "gerente@empresa.com",
-        senha: "gerente123",
-        role: "gerente"
-      }],
+      users: [{ id: "gerente-1", nome: "Gerente Principal", email: "gerente@empresa.com", senha: "gerente123", role: "gerente" }],
       atividades: []
     };
-
-    function generateId() {
-      return Date.now() + "-" + Math.random().toString(36).slice(2, 9);
-    }
-
+    function generateId() { return Date.now() + "-" + Math.random().toString(36).slice(2, 9); }
     function getData() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-          return JSON.parse(JSON.stringify(defaultData));
-        }
+        if (!raw) { localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData)); return JSON.parse(JSON.stringify(defaultData)); }
         return JSON.parse(raw);
-      } catch {
-        return JSON.parse(JSON.stringify(defaultData));
-      }
+      } catch { return JSON.parse(JSON.stringify(defaultData)); }
     }
-
-    function saveData(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
+    function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
     function formatDate(iso) {
-      try {
-        return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit", month: "2-digit", year: "numeric",
-          hour: "2-digit", minute: "2-digit"
-        });
-      } catch { return iso; }
+      try { return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }); }
+      catch { return iso; }
     }
-
     const statusLabel = { pendente: "Pendente", em_andamento: "Em Andamento", concluida: "Concluída" };
     const statusColor = {
       pendente: "bg-amber-100 text-amber-800 border-amber-300",
       em_andamento: "bg-blue-100 text-blue-800 border-blue-300",
       concluida: "bg-emerald-100 text-emerald-800 border-emerald-300"
     };
-
     let state = {
-      user: null,
-      email: "",
-      senha: "",
-      erroLogin: "",
-      tab: "pendente",
-      atividades: [],
-      estagiarios: [],
-      showCadastro: false,
-      showNovaAtividade: false,
-      selectedAtividade: null,
-      novoComentario: "",
-      nomeEst: "",
-      emailEst: "",
-      senhaEst: "",
-      msgCadastro: "",
-      tituloAtv: "",
-      descAtv: "",
-      estagiarioIdAtv: ""
+      user: null, email: "", senha: "", erroLogin: "", tab: "pendente", atividades: [], estagiarios: [],
+      showCadastro: false, showNovaAtividade: false, selectedAtividade: null, novoComentario: "",
+      nomeEst: "", emailEst: "", senhaEst: "", msgCadastro: "", tituloAtv: "", descAtv: "", estagiarioIdAtv: ""
     };
-
-    try {
-      const saved = localStorage.getItem(USER_KEY);
-      if (saved) state.user = JSON.parse(saved);
-    } catch {}
-
+    try { const saved = localStorage.getItem(USER_KEY); if (saved) state.user = JSON.parse(saved); } catch {}
     function login() {
       state.erroLogin = "";
       const data = getData();
       const u = data.users.find(x => x.email === state.email.trim() && x.senha === state.senha);
-      if (u) {
-        state.user = u;
-        localStorage.setItem(USER_KEY, JSON.stringify(u));
-        state.email = "";
-        state.senha = "";
-        carregarDados();
-      } else {
-        state.erroLogin = "Email ou senha incorretos.";
-      }
+      if (u) { state.user = u; localStorage.setItem(USER_KEY, JSON.stringify(u)); state.email = ""; state.senha = ""; carregarDados(); }
+      else { state.erroLogin = "Email ou senha incorretos."; }
       render();
     }
-
-    function logout() {
-      state.user = null;
-      localStorage.removeItem(USER_KEY);
-      state.atividades = [];
-      state.estagiarios = [];
-      render();
-    }
-
+    function logout() { state.user = null; localStorage.removeItem(USER_KEY); state.atividades = []; state.estagiarios = []; render(); }
     function carregarDados() {
       if (!state.user) return;
       const data = getData();
-      if (state.user.role === "gerente") {
-        state.atividades = data.atividades;
-        state.estagiarios = data.users.filter(u => u.role === "estagiario");
-      } else {
-        state.atividades = data.atividades.filter(a => a.estagiarioId === state.user.id);
-      }
+      if (state.user.role === "gerente") { state.atividades = data.atividades; state.estagiarios = data.users.filter(u => u.role === "estagiario"); }
+      else { state.atividades = data.atividades.filter(a => a.estagiarioId === state.user.id); }
     }
-
     function cadastrarEstagiario() {
       state.msgCadastro = "";
-      if (!state.nomeEst || !state.emailEst || !state.senhaEst) {
-        state.msgCadastro = "Preencha todos os campos.";
-        render();
-        return;
-      }
+      if (!state.nomeEst || !state.emailEst || !state.senhaEst) { state.msgCadastro = "Preencha todos os campos."; render(); return; }
       const data = getData();
-      if (data.users.some(u => u.email === state.emailEst)) {
-        state.msgCadastro = "Email já cadastrado.";
-        render();
-        return;
-      }
-      data.users.push({
-        id: generateId(),
-        nome: state.nomeEst,
-        email: state.emailEst,
-        senha: state.senhaEst,
-        role: "estagiario"
-      });
+      if (data.users.some(u => u.email === state.emailEst)) { state.msgCadastro = "Email já cadastrado."; render(); return; }
+      data.users.push({ id: generateId(), nome: state.nomeEst, email: state.emailEst, senha: state.senhaEst, role: "estagiario" });
       saveData(data);
       state.msgCadastro = "Estagiário cadastrado com sucesso!";
       state.nomeEst = state.emailEst = state.senhaEst = "";
       carregarDados();
-      setTimeout(() => { state.showCadastro = false; state.msgCadastro = ""; render(); }, 1200);
+      setTimeout(function() { state.showCadastro = false; state.msgCadastro = ""; render(); }, 1200);
       render();
     }
-
     function criarAtividade() {
       if (!state.tituloAtv || !state.estagiarioIdAtv || !state.user) return;
       const data = getData();
       const est = data.users.find(u => u.id === state.estagiarioIdAtv);
       if (!est) return;
       const agora = new Date().toISOString();
-      data.atividades.push({
-        id: generateId(),
-        titulo: state.tituloAtv,
-        descricao: state.descAtv,
-        estagiarioId: est.id,
-        estagiarioNome: est.nome,
-        status: "pendente",
-        criadaPor: state.user.nome,
-        criadaEm: agora,
-        atualizadaEm: agora,
-        comentarios: []
-      });
+      data.atividades.push({ id: generateId(), titulo: state.tituloAtv, descricao: state.descAtv, estagiarioId: est.id, estagiarioNome: est.nome, status: "pendente", criadaPor: state.user.nome, criadaEm: agora, atualizadaEm: agora, comentarios: [] });
       saveData(data);
       state.tituloAtv = state.descAtv = state.estagiarioIdAtv = "";
       state.showNovaAtividade = false;
       carregarDados();
       render();
     }
-
     function atualizarStatus(id, status) {
       const data = getData();
       const atv = data.atividades.find(a => a.id === id);
@@ -187,24 +93,15 @@
       atv.atualizadaEm = new Date().toISOString();
       saveData(data);
       carregarDados();
-      if (state.selectedAtividade && state.selectedAtividade.id === id) {
-        state.selectedAtividade = data.atividades.find(a => a.id === id);
-      }
+      if (state.selectedAtividade && state.selectedAtividade.id === id) state.selectedAtividade = data.atividades.find(a => a.id === id);
       render();
     }
-
     function adicionarComentario() {
       if (!state.selectedAtividade || !state.user || !state.novoComentario.trim()) return;
       const data = getData();
       const atv = data.atividades.find(a => a.id === state.selectedAtividade.id);
       if (!atv) return;
-      atv.comentarios.push({
-        id: generateId(),
-        userId: state.user.id,
-        userNome: state.user.nome,
-        texto: state.novoComentario.trim(),
-        criadoEm: new Date().toISOString()
-      });
+      atv.comentarios.push({ id: generateId(), userId: state.user.id, userNome: state.user.nome, texto: state.novoComentario.trim(), criadoEm: new Date().toISOString() });
       atv.atualizadaEm = new Date().toISOString();
       saveData(data);
       state.novoComentario = "";
@@ -212,226 +109,56 @@
       state.selectedAtividade = data.atividades.find(a => a.id === atv.id);
       render();
     }
-
     function escapeHtml(t) {
       if (!t) return "";
-      return String(t).replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">").replace(/"/g,""");
+      var d = document.createElement("div");
+      d.textContent = t;
+      return d.innerHTML;
     }
-
     function render() {
-      const app = document.getElementById("app");
+      var app = document.getElementById("app");
       if (!state.user) {
-        app.innerHTML = `
-          <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
-            <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-              <div class="text-center mb-8">
-                <h1 class="text-2xl font-bold text-slate-800">Sistema de Delegação</h1>
-                <p class="text-slate-500 mt-1">Atividades para Estagiários</p>
-              </div>
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                  <input type="email" id="login-email" value="${state.email}" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="seu@email.com" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
-                  <input type="password" id="login-senha" value="${state.senha}" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••" />
-                </div>
-                ${state.erroLogin ? `<p class="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">${state.erroLogin}</p>` : ""}
-                <button onclick="doLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition">Entrar</button>
-              </div>
-              <div class="mt-6 p-4 bg-slate-50 rounded-lg text-sm text-slate-600">
-                <p class="font-medium mb-2">Acesso de demonstração:</p>
-                <p><strong>Gerente:</strong> gerente@empresa.com / gerente123</p>
-                <p class="mt-1 text-xs text-slate-500">Cadastre estagiários no painel do gerente e use o email/senha criados.</p>
-              </div>
-            </div>
-          </div>`;
+        app.innerHTML = '<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8"><div class="text-center mb-8"><h1 class="text-2xl font-bold text-slate-800">Sistema de Delegação</h1><p class="text-slate-500 mt-1">Atividades para Estagiários</p></div><div class="space-y-4"><div><label class="block text-sm font-medium text-slate-700 mb-1">Email</label><input type="email" id="login-email" value="' + (state.email || '') + '" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="seu@email.com" /></div><div><label class="block text-sm font-medium text-slate-700 mb-1">Senha</label><input type="password" id="login-senha" value="' + (state.senha || '') + '" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••" /></div>' + (state.erroLogin ? '<p class="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">' + state.erroLogin + '</p>' : '') + '<button onclick="doLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition">Entrar</button></div><div class="mt-6 p-4 bg-slate-50 rounded-lg text-sm text-slate-600"><p class="font-medium mb-2">Acesso de demonstração:</p><p><strong>Gerente:</strong> gerente@empresa.com / gerente123</p><p class="mt-1 text-xs text-slate-500">Cadastre estagiários no painel do gerente e use o email/senha criados.</p></div></div></div>';
         return;
       }
-
       carregarDados();
-      const filtered = state.tab === "todas" ? state.atividades : state.atividades.filter(a => a.status === state.tab);
-
-      let listaHtml = filtered.length === 0
-        ? `<div class="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-500">Nenhuma atividade nesta aba.</div>`
-        : `<div class="grid gap-4">${filtered.map(atv => `
-            <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition cursor-pointer" onclick="abrirAtividade('${atv.id}')">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-slate-800 text-lg">${escapeHtml(atv.titulo)}</h3>
-                  <p class="text-slate-600 text-sm mt-1 line-clamp-2">${escapeHtml(atv.descricao || "")}</p>
-                  <div class="flex flex-wrap gap-3 mt-3 text-xs text-slate-500">
-                    <span>Estagiário: <strong>${escapeHtml(atv.estagiarioNome)}</strong></span>
-                    <span>Criada: ${formatDate(atv.criadaEm)}</span>
-                    ${atv.comentarios.length ? `<span class="text-blue-600">${atv.comentarios.length} comentário(s)</span>` : ""}
-                  </div>
-                </div>
-                <span class="px-3 py-1 rounded-full text-xs font-medium border ${statusColor[atv.status]}">${statusLabel[atv.status]}</span>
-              </div>
-            </div>`).join("")}</div>`;
-
-      app.innerHTML = `
-        <div class="min-h-screen bg-slate-100">
-          <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
-            <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-              <div>
-                <h1 class="text-lg font-bold text-slate-800">Sistema de Delegação</h1>
-                <p class="text-xs text-slate-500">${state.user.role === "gerente" ? "Painel do Gerente" : "Painel do Estagiário"}</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-slate-600">Olá, <strong>${escapeHtml(state.user.nome)}</strong></span>
-                <button onclick="logout()" class="text-sm px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Sair</button>
-              </div>
-            </div>
-          </header>
-          <main class="max-w-6xl mx-auto px-4 py-6">
-            ${state.user.role === "gerente" ? `
-              <div class="flex flex-wrap gap-3 mb-6">
-                <button onclick="state.showCadastro=true; state.msgCadastro=''; render()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Cadastrar Estagiário</button>
-                <button onclick="state.showNovaAtividade=true; carregarDados(); render()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Nova Atividade</button>
-              </div>` : ""}
-            <div class="flex flex-wrap gap-2 mb-6">
-              ${[["pendente","Pendentes"],["em_andamento","Em Andamento"],["concluida","Concluídas"],["todas","Todas"]].map(([k,l]) => {
-                const count = k === "todas" ? state.atividades.length : state.atividades.filter(a => a.status === k).length;
-                return `<button onclick="state.tab='${k}'; render()" class="px-4 py-2 rounded-lg text-sm font-medium ${state.tab===k ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}">${l} (${count})</button>`;
-              }).join("")}
-            </div>
-            ${listaHtml}
-          </main>
-        </div>
-        ${state.showCadastro ? modalCadastro() : ""}
-        ${state.showNovaAtividade ? modalNovaAtividade() : ""}
-        ${state.selectedAtividade ? modalDetalhe() : ""}
-      `;
+      var filtered = state.tab === "todas" ? state.atividades : state.atividades.filter(function(a) { return a.status === state.tab; });
+      var listaHtml = filtered.length === 0 ? '<div class="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-500">Nenhuma atividade nesta aba.</div>' : '<div class="grid gap-4">' + filtered.map(function(atv) {
+        return '<div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition cursor-pointer" onclick="abrirAtividade(\'' + atv.id + '\')"><div class="flex flex-wrap items-start justify-between gap-3"><div class="flex-1 min-w-0"><h3 class="font-semibold text-slate-800 text-lg">' + escapeHtml(atv.titulo) + '</h3><p class="text-slate-600 text-sm mt-1 line-clamp-2">' + escapeHtml(atv.descricao || '') + '</p><div class="flex flex-wrap gap-3 mt-3 text-xs text-slate-500"><span>Estagiário: <strong>' + escapeHtml(atv.estagiarioNome) + '</strong></span><span>Criada: ' + formatDate(atv.criadaEm) + '</span>' + (atv.comentarios.length ? '<span class="text-blue-600">' + atv.comentarios.length + ' comentário(s)</span>' : '') + '</div></div><span class="px-3 py-1 rounded-full text-xs font-medium border ' + statusColor[atv.status] + '">' + statusLabel[atv.status] + '</span></div></div>';
+      }).join('') + '</div>';
+      var tabs = [['pendente','Pendentes'],['em_andamento','Em Andamento'],['concluida','Concluídas'],['todas','Todas']].map(function(pair) {
+        var k = pair[0], l = pair[1];
+        var count = k === "todas" ? state.atividades.length : state.atividades.filter(function(a) { return a.status === k; }).length;
+        return '<button onclick="state.tab=\'' + k + '\'; render()" class="px-4 py-2 rounded-lg text-sm font-medium ' + (state.tab===k ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50') + '">' + l + ' (' + count + ')</button>';
+      }).join('');
+      var acoesGerente = state.user.role === "gerente" ? '<div class="flex flex-wrap gap-3 mb-6"><button onclick="state.showCadastro=true; state.msgCadastro=\'\'; render()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Cadastrar Estagiário</button><button onclick="state.showNovaAtividade=true; carregarDados(); render()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Nova Atividade</button></div>' : '';
+      app.innerHTML = '<div class="min-h-screen bg-slate-100"><header class="bg-white border-b border-slate-200 sticky top-0 z-10"><div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><div><h1 class="text-lg font-bold text-slate-800">Sistema de Delegação</h1><p class="text-xs text-slate-500">' + (state.user.role === "gerente" ? "Painel do Gerente" : "Painel do Estagiário") + '</p></div><div class="flex items-center gap-3"><span class="text-sm text-slate-600">Olá, <strong>' + escapeHtml(state.user.nome) + '</strong></span><button onclick="logout()" class="text-sm px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">Sair</button></div></div></header><main class="max-w-6xl mx-auto px-4 py-6">' + acoesGerente + '<div class="flex flex-wrap gap-2 mb-6">' + tabs + '</div>' + listaHtml + '</main></div>' + (state.showCadastro ? modalCadastro() : '') + (state.showNovaAtividade ? modalNovaAtividade() : '') + (state.selectedAtividade ? modalDetalhe() : '');
     }
-
     function modalCadastro() {
-      return `
-        <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-bold mb-4">Cadastrar Estagiário</h2>
-            <div class="space-y-3">
-              <input type="text" id="cad-nome" placeholder="Nome completo" value="${escapeHtml(state.nomeEst)}" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" />
-              <input type="email" id="cad-email" placeholder="Email" value="${escapeHtml(state.emailEst)}" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" />
-              <input type="password" id="cad-senha" placeholder="Senha" value="${escapeHtml(state.senhaEst)}" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" />
-              ${state.msgCadastro ? `<p class="text-sm px-3 py-2 rounded-lg ${state.msgCadastro.includes("sucesso") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}">${state.msgCadastro}</p>` : ""}
-              <div class="flex gap-2 pt-2">
-                <button onclick="state.showCadastro=false; render()" class="flex-1 py-2.5 border rounded-lg hover:bg-slate-50">Cancelar</button>
-                <button onclick="doCadastro()" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Cadastrar</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
+      return '<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"><h2 class="text-xl font-bold mb-4">Cadastrar Estagiário</h2><div class="space-y-3"><input type="text" id="cad-nome" placeholder="Nome completo" value="' + escapeHtml(state.nomeEst) + '" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" /><input type="email" id="cad-email" placeholder="Email" value="' + escapeHtml(state.emailEst) + '" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" /><input type="password" id="cad-senha" placeholder="Senha" value="' + escapeHtml(state.senhaEst) + '" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500" />' + (state.msgCadastro ? '<p class="text-sm px-3 py-2 rounded-lg ' + (state.msgCadastro.indexOf("sucesso") >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700") + '">' + state.msgCadastro + '</p>' : '') + '<div class="flex gap-2 pt-2"><button onclick="state.showCadastro=false; render()" class="flex-1 py-2.5 border rounded-lg hover:bg-slate-50">Cancelar</button><button onclick="doCadastro()" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Cadastrar</button></div></div></div></div>';
     }
-
     function modalNovaAtividade() {
       if (state.estagiarios.length === 0) {
-        return `
-          <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-              <h2 class="text-xl font-bold mb-4">Nova Atividade</h2>
-              <p class="text-slate-500 mb-4">Cadastre pelo menos um estagiário antes de criar atividades.</p>
-              <button onclick="state.showNovaAtividade=false; render()" class="w-full py-2.5 border rounded-lg hover:bg-slate-50">Fechar</button>
-            </div>
-          </div>`;
+        return '<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"><h2 class="text-xl font-bold mb-4">Nova Atividade</h2><p class="text-slate-500 mb-4">Cadastre pelo menos um estagiário antes de criar atividades.</p><button onclick="state.showNovaAtividade=false; render()" class="w-full py-2.5 border rounded-lg hover:bg-slate-50">Fechar</button></div></div>';
       }
-      return `
-        <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-bold mb-4">Nova Atividade</h2>
-            <div class="space-y-3">
-              <input type="text" id="atv-titulo" placeholder="Título da atividade" value="${escapeHtml(state.tituloAtv)}" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-              <textarea id="atv-desc" placeholder="Descrição / instruções" rows="3" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none">${escapeHtml(state.descAtv)}</textarea>
-              <select id="atv-est" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Selecione o estagiário</option>
-                ${state.estagiarios.map(e => `<option value="${e.id}" ${state.estagiarioIdAtv===e.id?"selected":""}>${escapeHtml(e.nome)} (${escapeHtml(e.email)})</option>`).join("")}
-              </select>
-              <div class="flex gap-2 pt-2">
-                <button onclick="state.showNovaAtividade=false; render()" class="flex-1 py-2.5 border rounded-lg hover:bg-slate-50">Cancelar</button>
-                <button onclick="doCriarAtividade()" class="flex-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Criar</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
+      var opts = state.estagiarios.map(function(e) { return '<option value="' + e.id + '"' + (state.estagiarioIdAtv===e.id ? ' selected' : '') + '>' + escapeHtml(e.nome) + ' (' + escapeHtml(e.email) + ')</option>'; }).join('');
+      return '<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"><h2 class="text-xl font-bold mb-4">Nova Atividade</h2><div class="space-y-3"><input type="text" id="atv-titulo" placeholder="Título da atividade" value="' + escapeHtml(state.tituloAtv) + '" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" /><textarea id="atv-desc" placeholder="Descrição / instruções" rows="3" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none">' + escapeHtml(state.descAtv) + '</textarea><select id="atv-est" class="w-full px-4 py-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"><option value="">Selecione o estagiário</option>' + opts + '</select><div class="flex gap-2 pt-2"><button onclick="state.showNovaAtividade=false; render()" class="flex-1 py-2.5 border rounded-lg hover:bg-slate-50">Cancelar</button><button onclick="doCriarAtividade()" class="flex-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Criar</button></div></div></div></div>';
     }
-
     function modalDetalhe() {
-      const atv = state.selectedAtividade;
-      return `
-        <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-            <div class="flex justify-between items-start mb-4">
-              <div>
-                <h2 class="text-xl font-bold text-slate-800">${escapeHtml(atv.titulo)}</h2>
-                <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium border ${statusColor[atv.status]}">${statusLabel[atv.status]}</span>
-              </div>
-              <button onclick="state.selectedAtividade=null; render()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
-            </div>
-            <p class="text-slate-600 mb-4 whitespace-pre-wrap">${escapeHtml(atv.descricao || "Sem descrição.")}</p>
-            <div class="text-xs text-slate-500 space-y-1 mb-4">
-              <p>Estagiário: <strong>${escapeHtml(atv.estagiarioNome)}</strong></p>
-              <p>Criada por: ${escapeHtml(atv.criadaPor)} em ${formatDate(atv.criadaEm)}</p>
-              <p>Atualizada: ${formatDate(atv.atualizadaEm)}</p>
-            </div>
-            <div class="mb-6">
-              <p class="text-sm font-medium text-slate-700 mb-2">Alterar status:</p>
-              <div class="flex flex-wrap gap-2">
-                ${["pendente","em_andamento","concluida"].map(s => `
-                  <button onclick="atualizarStatus('${atv.id}','${s}')" ${atv.status===s?"disabled":""}
-                    class="px-3 py-1.5 rounded-lg text-sm border ${atv.status===s ? statusColor[s]+" opacity-70 cursor-default" : "bg-white hover:bg-slate-50 border-slate-300"}">
-                    ${statusLabel[s]}
-                  </button>`).join("")}
-              </div>
-            </div>
-            <div class="border-t pt-4">
-              <h3 class="font-semibold text-slate-800 mb-3">Comentários / Pedidos de Ajuda</h3>
-              ${atv.comentarios.length === 0
-                ? `<p class="text-sm text-slate-400 mb-3">Nenhum comentário ainda.</p>`
-                : `<div class="space-y-3 mb-4 max-h-48 overflow-y-auto">${atv.comentarios.map(c => `
-                    <div class="bg-slate-50 rounded-lg p-3">
-                      <div class="flex justify-between text-xs text-slate-500 mb-1">
-                        <strong class="text-slate-700">${escapeHtml(c.userNome)}</strong>
-                        <span>${formatDate(c.criadoEm)}</span>
-                      </div>
-                      <p class="text-sm text-slate-700">${escapeHtml(c.texto)}</p>
-                    </div>`).join("")}</div>`}
-              <div class="flex gap-2">
-                <input type="text" id="novo-comentario" value="${escapeHtml(state.novoComentario)}" placeholder="Escreva um comentário ou peça ajuda..." class="flex-1 px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-                <button onclick="doComentario()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Enviar</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
+      var atv = state.selectedAtividade;
+      var statusBtns = ["pendente","em_andamento","concluida"].map(function(s) {
+        return '<button onclick="atualizarStatus(\'' + atv.id + '\',\'' + s + '\')" ' + (atv.status===s ? 'disabled' : '') + ' class="px-3 py-1.5 rounded-lg text-sm border ' + (atv.status===s ? statusColor[s] + ' opacity-70 cursor-default' : 'bg-white hover:bg-slate-50 border-slate-300') + '">' + statusLabel[s] + '</button>';
+      }).join('');
+      var comentarios = atv.comentarios.length === 0 ? '<p class="text-sm text-slate-400 mb-3">Nenhum comentário ainda.</p>' : '<div class="space-y-3 mb-4 max-h-48 overflow-y-auto">' + atv.comentarios.map(function(c) {
+        return '<div class="bg-slate-50 rounded-lg p-3"><div class="flex justify-between text-xs text-slate-500 mb-1"><strong class="text-slate-700">' + escapeHtml(c.userNome) + '</strong><span>' + formatDate(c.criadoEm) + '</span></div><p class="text-sm text-slate-700">' + escapeHtml(c.texto) + '</p></div>';
+      }).join('') + '</div>';
+      return '<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"><div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6"><div class="flex justify-between items-start mb-4"><div><h2 class="text-xl font-bold text-slate-800">' + escapeHtml(atv.titulo) + '</h2><span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium border ' + statusColor[atv.status] + '">' + statusLabel[atv.status] + '</span></div><button onclick="state.selectedAtividade=null; render()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button></div><p class="text-slate-600 mb-4 whitespace-pre-wrap">' + escapeHtml(atv.descricao || "Sem descrição.") + '</p><div class="text-xs text-slate-500 space-y-1 mb-4"><p>Estagiário: <strong>' + escapeHtml(atv.estagiarioNome) + '</strong></p><p>Criada por: ' + escapeHtml(atv.criadaPor) + ' em ' + formatDate(atv.criadaEm) + '</p><p>Atualizada: ' + formatDate(atv.atualizadaEm) + '</p></div><div class="mb-6"><p class="text-sm font-medium text-slate-700 mb-2">Alterar status:</p><div class="flex flex-wrap gap-2">' + statusBtns + '</div></div><div class="border-t pt-4"><h3 class="font-semibold text-slate-800 mb-3">Comentários / Pedidos de Ajuda</h3>' + comentarios + '<div class="flex gap-2"><input type="text" id="novo-comentario" value="' + escapeHtml(state.novoComentario) + '" placeholder="Escreva um comentário ou peça ajuda..." class="flex-1 px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm" /><button onclick="doComentario()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Enviar</button></div></div></div></div>';
     }
-
-    function doLogin() {
-      state.email = document.getElementById("login-email").value;
-      state.senha = document.getElementById("login-senha").value;
-      login();
-    }
-    function doCadastro() {
-      state.nomeEst = document.getElementById("cad-nome").value;
-      state.emailEst = document.getElementById("cad-email").value;
-      state.senhaEst = document.getElementById("cad-senha").value;
-      cadastrarEstagiario();
-    }
-    function doCriarAtividade() {
-      state.tituloAtv = document.getElementById("atv-titulo").value;
-      state.descAtv = document.getElementById("atv-desc").value;
-      state.estagiarioIdAtv = document.getElementById("atv-est").value;
-      criarAtividade();
-    }
-    function doComentario() {
-      state.novoComentario = document.getElementById("novo-comentario").value;
-      adicionarComentario();
-    }
-    function abrirAtividade(id) {
-      const data = getData();
-      state.selectedAtividade = data.atividades.find(a => a.id === id);
-      render();
-    }
-
+    function doLogin() { state.email = document.getElementById("login-email").value; state.senha = document.getElementById("login-senha").value; login(); }
+    function doCadastro() { state.nomeEst = document.getElementById("cad-nome").value; state.emailEst = document.getElementById("cad-email").value; state.senhaEst = document.getElementById("cad-senha").value; cadastrarEstagiario(); }
+    function doCriarAtividade() { state.tituloAtv = document.getElementById("atv-titulo").value; state.descAtv = document.getElementById("atv-desc").value; state.estagiarioIdAtv = document.getElementById("atv-est").value; criarAtividade(); }
+    function doComentario() { state.novoComentario = document.getElementById("novo-comentario").value; adicionarComentario(); }
+    function abrirAtividade(id) { var data = getData(); state.selectedAtividade = data.atividades.find(function(a) { return a.id === id; }); render(); }
     render();
   </script>
 </body>
